@@ -1,0 +1,44 @@
+════════════════════════════════════════════════════════════════
+  CreditChain — Agent Commerce, live on-chain
+════════════════════════════════════════════════════════════════
+  RPC:    http://localhost:8545  (chainId 2026042403)
+  Block:  176963
+  Owner:  0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+
+  Agent:    0xACb71DF6d5662Bd19ceA7a28C56BC34253640425   (autonomous payer)
+  Merchant: 0x34adFbF517929FAad234813CFE1c7b0806830D97   (allowlisted API provider)
+  Outsider: 0x9A462D3F91eb75b57cb1DD5cf0BAC4e91c43B181   (NOT allowlisted)
+
+▸ Stipend: give the agent gas money (not spending money)
+  ✓ agent funded with 0.05 CCC for gas only
+
+▸ Deploy AgentSpendVault
+  ✓ deployed at 0x1275D096B9DBf2347bD2a131Fb6BDaB0B4882487
+
+▸ Owner grants a mandate (the human sets the rails, once)
+    budget 5 CCC · per-tx ≤ 2 CCC · recipient allowlist ON · funded 5 CCC
+  ✓ mandate #1 created; merchant allowlisted
+    spendableNow = 2 CCC  (tightest rail = per-tx cap)
+
+▸ Agent runs its workload and pays per task (no human in the loop)
+  ✓ paid 2 CCC for task image-embed-001  → merchant
+  ✓ paid 2 CCC for task image-embed-002  → merchant
+    merchant balance now: 4 CCC
+    spendableNow = 1 CCC  (only 1 CCC of budget left)
+
+▸ The chain refuses every out-of-bounds payment (rails enforced on-chain)
+  ✗ chain rejected: single 3 CCC payment > 2 CCC per-tx cap        PerTxExceeded()
+  ✗ chain rejected: 2 CCC payment > 1 CCC remaining budget         BudgetExceeded()
+  ✗ chain rejected: payment to a non-allowlisted address           RecipientNotAllowed()
+  ✓ agent CAN still make a valid 1 CCC payment within its remaining budget:
+  ✓ paid 1 CCC for task image-embed-003  → merchant (budget now exhausted)
+
+▸ Owner revokes the mandate — instant kill switch + refund of the unspent
+  ✓ mandate revoked; unspent CCC refunded to owner
+  ✗ chain rejected: agent payment after revoke                      MandateInactive()
+
+════════════════════════════════════════════════════════════════
+  Result: the agent spent autonomously; the chain held every rail;
+  the owner never approved a single payment and reclaimed the rest.
+  Vault: 0x1275D096B9DBf2347bD2a131Fb6BDaB0B4882487
+════════════════════════════════════════════════════════════════
