@@ -22,6 +22,16 @@ devnet          = "https://devnet.creditchain.org"
 testnet         = "https://testnet.creditchain.org"
 mainnet         = "https://rpc.creditchain.org"
 
+[fuzz]
+runs            = 512
+
+# Property-based invariant testing for the agent-finance vault. Long runs with
+# deep call sequences are how the solvency/budget properties earn their keep.
+[invariant]
+runs            = 256
+depth           = 50
+fail_on_revert  = false
+
 [fmt]
 line_length     = 100
 tab_width       = 4
