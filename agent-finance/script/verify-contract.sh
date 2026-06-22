@@ -29,15 +29,23 @@ jq -c '.abi' "$ARTIFACT" > /tmp/.verify_abi.json
 
 status=0
 for A in "$@"; do
-  REQ="$(python3 - "$CODE" "$NAME" "$SRC_FILE" "$COMPILER" <<'PY'
+  REQ="$(python3 - "$CODE" "$NAME" "$SRC_FILE" "$COMPILER" "$ARTIFACT" <<'PY'
 import sys, json, pathlib
-code, name, src_file, compiler = sys.argv[1:5]
+code, name, src_file, compiler, artifact = sys.argv[1:6]
+art = json.loads(pathlib.Path(artifact).read_text())
+# Flatten the compiler immutableReferences into {start,length} ranges so the
+# server can mask constructor-set immutables before comparing bytecode.
+imm = []
+for refs in (art.get("deployedBytecode", {}).get("immutableReferences") or {}).values():
+    for r in refs:
+        imm.append({"start": r["start"], "length": r["length"]})
 print(json.dumps({
     "contract_name": name,
     "compiler_version": compiler,
     "source_code": pathlib.Path(src_file).read_text(),
     "abi": json.loads(pathlib.Path("/tmp/.verify_abi.json").read_text()),
     "deployed_bytecode": code,
+    "immutable_references": imm,
     "optimizer_enabled": True,
     "optimizer_runs": 1000000,
     "evm_version": "cancun",
