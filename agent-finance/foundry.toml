@@ -3,36 +3,36 @@
 # Deploy:         see ../../deploy/scripts/deploy-agent-finance.sh
 
 [profile.default]
-src             = "src"
-test            = "test"
-script          = "script"
-out             = "out"
-libs            = ["lib"]
-solc_version    = "0.8.24"
-optimizer       = true
-optimizer_runs  = 1_000_000
-via_ir          = false
-evm_version     = "cancun"
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 1_000_000
+via_ir = false
+evm_version = "cancun"
 
 # Default RPC endpoints — pass `--rpc-url <alias>` to forge.
 [rpc_endpoints]
-local_single    = "http://127.0.0.1:8545"
+local_single = "http://127.0.0.1:8545"
 local_multinode = "http://127.0.0.1:8645"
-devnet          = "https://devnet.creditchain.org"
-testnet         = "https://testnet.creditchain.org"
-mainnet         = "https://rpc.creditchain.org"
+devnet = "https://devnet.creditchain.org"
+testnet = "https://testnet.creditchain.org"
+mainnet = "https://rpc.creditchain.org"
 
 [fuzz]
-runs            = 512
+runs = 512
 
 # Property-based invariant testing for the agent-finance vault. Long runs with
 # deep call sequences are how the solvency/budget properties earn their keep.
 [invariant]
-runs            = 256
-depth           = 50
-fail_on_revert  = false
+runs = 256
+depth = 50
+fail_on_revert = false
 
 [fmt]
-line_length     = 100
-tab_width       = 4
+line_length = 100
+tab_width = 4
 bracket_spacing = true
