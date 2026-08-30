@@ -1,0 +1,19 @@
+# Treasury custody contracts — the rails the mainnet genesis allocation requires.
+# build-genesis.py refuses a high-value role behind a bare EOA, so these are what
+# "custody: timelock / multisig / contract" actually resolves to.
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["../agent-finance/lib"]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 1_000_000
+evm_version = "cancun"
+
+[rpc_endpoints]
+testnet = "https://testnet.creditchain.org"
+devnet = "https://devnet.creditchain.org"
+
+[fuzz]
+runs = 512
