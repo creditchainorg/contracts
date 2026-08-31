@@ -5,6 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { VestingWallet } from "../src/VestingWallet.sol";
 import { Multisig } from "../src/Multisig.sol";
 import { Timelock } from "../src/Timelock.sol";
+import { StakingReserve } from "../src/StakingReserve.sol";
 
 /// @notice Tests for the custody rails the mainnet genesis allocation depends on.
 ///
@@ -311,5 +312,110 @@ contract TimelockTest is Test {
         assertFalse(t.isReady(id));
         vm.warp(block.timestamp + DELAY);
         assertTrue(t.isReady(id));
+    }
+}
+
+contract StakingReserveTest is Test {
+    address governor = makeAddr("governor");
+    address v1 = makeAddr("validator1");
+    address v2 = makeAddr("validator2");
+    address outsider = makeAddr("outsider");
+    StakingReserve r;
+    uint256 constant RESERVE = 250_000_000 ether;
+
+    function setUp() public {
+        r = new StakingReserve{ value: RESERVE }(governor, 10_000_000 ether, 1 days);
+    }
+
+    function test_only_governor_registers() public {
+        vm.prank(outsider);
+        vm.expectRevert(StakingReserve.NotGovernor.selector);
+        r.registerValidator(v1, 1 ether);
+    }
+
+    /// Promising more than the reserve holds is how it becomes insolvent on paper
+    /// long before anyone notices on-chain.
+    function test_cannot_allocate_more_than_the_reserve_holds() public {
+        vm.prank(governor);
+        vm.expectRevert(
+            abi.encodeWithSelector(StakingReserve.OverAllocated.selector, RESERVE + 1, RESERVE)
+        );
+        r.registerValidator(v1, RESERVE + 1);
+    }
+
+    function test_register_then_claim() public {
+        vm.prank(governor);
+        r.registerValidator(v1, 5_000_000 ether);
+        assertEq(r.claimable(v1), 5_000_000 ether);
+
+        vm.prank(v1);
+        r.claim(5_000_000 ether);
+        assertEq(v1.balance, 5_000_000 ether);
+        assertEq(r.claimable(v1), 0);
+    }
+
+    function test_cannot_claim_twice() public {
+        vm.prank(governor);
+        r.registerValidator(v1, 1_000_000 ether);
+        vm.startPrank(v1);
+        r.claim(1_000_000 ether);
+        vm.expectRevert(StakingReserve.NothingClaimable.selector);
+        r.claim(1);
+        vm.stopPrank();
+    }
+
+    function test_unregistered_cannot_claim() public {
+        vm.prank(outsider);
+        vm.expectRevert(StakingReserve.NotActive.selector);
+        r.claim(1 ether);
+    }
+
+    /// The window ceiling bounds how fast value can leave under ANY authority.
+    function test_outflow_ceiling_bounds_a_compromised_validator() public {
+        vm.prank(governor);
+        r.registerValidator(v1, 50_000_000 ether);
+        vm.startPrank(v1);
+        r.claim(10_000_000 ether); // exactly the window limit
+        vm.expectRevert(abi.encodeWithSelector(StakingReserve.OutflowExceeded.selector, 1 ether, 0));
+        r.claim(1 ether);
+        vm.stopPrank();
+    }
+
+    function test_outflow_window_resets() public {
+        vm.prank(governor);
+        r.registerValidator(v1, 50_000_000 ether);
+        vm.prank(v1);
+        r.claim(10_000_000 ether);
+        vm.warp(block.timestamp + 1 days + 1);
+        assertEq(r.outflowRemaining(), 10_000_000 ether);
+        vm.prank(v1);
+        r.claim(10_000_000 ether); // must now succeed
+    }
+
+    /// Deactivating returns the unclaimed remainder to the pool rather than
+    /// stranding it.
+    function test_deactivation_returns_unclaimed_to_the_pool() public {
+        vm.startPrank(governor);
+        r.registerValidator(v1, 20_000_000 ether);
+        uint256 before = r.unallocated();
+        r.deactivateValidator(v1);
+        assertEq(r.unallocated(), before + 20_000_000 ether, "unclaimed not returned");
+        vm.stopPrank();
+
+        vm.prank(v1);
+        vm.expectRevert(StakingReserve.NotActive.selector);
+        r.claim(1 ether);
+    }
+
+    /// Anyone must be able to audit the reserve without permission.
+    function test_reserve_is_publicly_auditable() public {
+        vm.startPrank(governor);
+        r.registerValidator(v1, 30_000_000 ether);
+        r.registerValidator(v2, 20_000_000 ether);
+        vm.stopPrank();
+        vm.prank(outsider);
+        assertEq(r.validatorCount(), 2);
+        assertEq(r.totalAllocated(), 50_000_000 ether);
+        assertEq(r.unallocated(), RESERVE - 50_000_000 ether);
     }
 }
