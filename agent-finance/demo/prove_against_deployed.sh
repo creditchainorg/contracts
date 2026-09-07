@@ -19,6 +19,16 @@ EXPECT_CHAIN="${EXPECT_CHAIN:-2026042404}"
 VAULT="${VAULT:?set VAULT to the deployed AgentSpendVault address}"
 OWNER_KEY="${OWNER_KEY:?set OWNER_KEY (never echo it)}"
 
+# Denominated in CCC. Defaults match the original proof; shrink them to run
+# against a faucet-funded owner (the faucet gives 1 CCC per address per day).
+BUDGET_CCC="${BUDGET_CCC:-3}"      # total mandate budget
+PERTX_CCC="${PERTX_CCC:-1}"        # per-transaction ceiling
+SPEND_CCC="${SPEND_CCC:-$PERTX_CCC}"   # each autonomous payment
+GAS_CCC="${GAS_CCC:-0.05}"         # gas granted to the agent
+wei() { python3 -c "import sys;from decimal import Decimal;print(int(Decimal(sys.argv[1])*10**18))" "$1"; }
+BUDGET_WEI="$(wei "$BUDGET_CCC")"; PERTX_WEI="$(wei "$PERTX_CCC")"
+SPEND_WEI="$(wei "$SPEND_CCC")";   OVER_WEI="$(python3 -c "print($PERTX_WEI*2)")"
+
 b()   { printf '\033[1m%s\033[0m\n' "$*"; }
 dim() { printf '\033[2m%s\033[0m\n' "$*"; }
 ok()  { printf '  \033[32m✓\033[0m %s\n' "$*"; }
@@ -47,31 +57,31 @@ dim "  merchant $MERCHANT"
 send() { cast send --rpc-url "$RPC_URL" --private-key "$1" "${@:2}" >/dev/null; }
 
 b "1. owner grants a bounded mandate — the one human decision"
-send "$OWNER_KEY" --value 3ether "$VAULT" \
+send "$OWNER_KEY" --value "${BUDGET_WEI}wei" "$VAULT" \
   'createMandate(address,uint256,uint256,uint256,uint64,uint64,bool)' \
-  "$AGENT" 3000000000000000000 1000000000000000000 0 0 0 false
+  "$AGENT" "$BUDGET_WEI" "$PERTX_WEI" 0 0 0 false
 ID="$(cast call --rpc-url "$RPC_URL" "$VAULT" 'mandateCount()(uint256)')"
-ok "mandate #$ID · budget 3 CCC · per-tx <= 1 CCC"
+ok "mandate #$ID · budget $BUDGET_CCC CCC · per-tx <= $PERTX_CCC CCC"
 
 # The agent needs gas, not authority: this is the only thing the owner gives it
 # besides the mandate itself.
-send "$OWNER_KEY" --value 0.05ether "$AGENT"
-dim "  funded agent with 0.05 CCC for gas (authority comes from the mandate, not the balance)"
+send "$OWNER_KEY" --value "$(wei "$GAS_CCC")wei" "$AGENT"
+dim "  funded agent with $GAS_CCC CCC for gas (authority comes from the mandate, not the balance)"
 
 b "2. agent spends autonomously — no human approves any payment"
 send "$AGENT_KEY" "$VAULT" 'spend(uint256,address,uint256,bytes32)' \
-  "$ID" "$MERCHANT" 1000000000000000000 "$(cast keccak 'task-1')"
-ok "paid 1 CCC for task 1 -> merchant"
+  "$ID" "$MERCHANT" "$SPEND_WEI" "$(cast keccak 'task-1')"
+ok "paid $SPEND_CCC CCC for task 1 -> merchant"
 send "$AGENT_KEY" "$VAULT" 'spend(uint256,address,uint256,bytes32)' \
-  "$ID" "$MERCHANT" 1000000000000000000 "$(cast keccak 'task-2')"
-ok "paid 1 CCC for task 2 -> merchant"
+  "$ID" "$MERCHANT" "$SPEND_WEI" "$(cast keccak 'task-2')"
+ok "paid $SPEND_CCC CCC for task 2 -> merchant"
 
 b "3. the chain refuses what the mandate does not allow"
 if send "$AGENT_KEY" "$VAULT" 'spend(uint256,address,uint256,bytes32)' \
-     "$ID" "$MERCHANT" 2000000000000000000 "$(cast keccak 'task-3')" 2>/dev/null; then
+     "$ID" "$MERCHANT" "$OVER_WEI" "$(cast keccak 'task-3')" 2>/dev/null; then
   no "OVER-CAP SPEND SUCCEEDED — this is a failure of the proof"; exit 1
 else
-  no "chain rejected: 2 CCC > 1 CCC per-tx cap -> PerTxExceeded()"
+  no "chain rejected: $(python3 -c "print($OVER_WEI/1e18)") CCC > $PERTX_CCC CCC per-tx cap -> PerTxExceeded()"
 fi
 
 b "4. owner revokes — the agent is instantly powerless"
