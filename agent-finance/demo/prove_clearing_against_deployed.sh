@@ -50,11 +50,22 @@ PAYEE="$(cast wallet address --private-key "$PAYEE_KEY")"
 dim "  payer (buying agent)   $PAYER"
 dim "  payee (selling agent)  $PAYEE"
 
-for A in "$PAYER" "$PAYEE"; do
-  curl -fsS -X POST "$FAUCET" -H 'content-type: application/json' -d "{\"address\":\"$A\"}" >/dev/null
-done
-sleep 4
-ok "both agents funded from the public faucet (1 CCC each)"
+# Fund the two agents. The faucet is the self-service path on a public
+# testnet; FUNDER_KEY is for any chain that has no faucet -- a local dev node,
+# or a re-genesised network before the faucet is refilled.
+if [ -n "${FUNDER_KEY:-}" ]; then
+  for A in "$PAYER" "$PAYEE"; do
+    cast send --rpc-url "$RPC_URL" --private-key "$FUNDER_KEY" \
+      --value "${FUND_AMOUNT:-1ether}" "$A" >/dev/null
+  done
+  ok "both agents funded from FUNDER_KEY (${FUND_AMOUNT:-1ether} each)"
+else
+  for A in "$PAYER" "$PAYEE"; do
+    curl -fsS -X POST "$FAUCET" -H 'content-type: application/json' -d "{\"address\":\"$A\"}" >/dev/null
+  done
+  sleep 4
+  ok "both agents funded from the public faucet (1 CCC each)"
+fi
 
 send() { cast send --rpc-url "$RPC_URL" --private-key "$1" --json "${@:2}"; }
 gas_of() { python3 -c "import sys,json;print(int(json.load(sys.stdin)['gasUsed'],16) if str(json.load(open('/dev/null')) or '') else 0)" 2>/dev/null; }
@@ -66,18 +77,25 @@ ONCHAIN="$(cast call --rpc-url "$RPC_URL" "$CLEARING" 'voucherDigest(uint256,uin
 ok "EIP-712 digest computed offline == voucherDigest() on-chain"
 dim "  $LOCAL"
 
+# Size the collateral from the run rather than hardcoding it: the channel has
+# to cover PAYMENTS*STEP plus the extra vouchers step 4 issues, or the batch
+# settlement reverts CapExceeded for reasons that have nothing to do with the
+# chain under test.
+STEP=100000000000000                      # 0.0001 CCC per payment
+COMMIT=$(( (PAYMENTS + 100) * STEP ))     # headroom for step 4's 20 extra
+CH2_COMMIT=$(( 100 * STEP ))
+DEPOSIT=$(( COMMIT + CH2_COMMIT + 100 * STEP ))
+
 b "1. DEPOSIT — collateral is posted once"
-send "$PAYER_KEY" --value 0.5ether "$CLEARING" 'deposit()' >/dev/null
+send "$PAYER_KEY" --value "${DEPOSIT}wei" "$CLEARING" 'deposit()' >/dev/null
 ok "payer deposited $(ccc "$(cast call --rpc-url "$RPC_URL" "$CLEARING" 'available(address)(uint256)' "$PAYER" | cut -d' ' -f1)") CCC of available collateral"
 
 b "2. PAYMENT — a channel, then $PAYMENTS payments that never touch the chain"
-COMMIT=200000000000000000   # 0.2 CCC reserved against this channel
 send "$PAYER_KEY" "$CLEARING" 'openChannel(address,uint256,uint256,uint64)' \
   "$PAYEE" "$COMMIT" "$COMMIT" "$(( $(date +%s) + 86400 ))" >/dev/null
 CH="$(cast call --rpc-url "$RPC_URL" "$CLEARING" 'channelCount()(uint256)' | cut -d' ' -f1)"
 ok "channel #$CH open · $(ccc $COMMIT) CCC committed · payer's available now $(ccc "$(cast call --rpc-url "$RPC_URL" "$CLEARING" 'available(address)(uint256)' "$PAYER" | cut -d' ' -f1)") CCC"
 
-STEP=100000000000000        # 0.0001 CCC per payment
 STREAM="$(VOUCHER_KEY="$PAYER_KEY" python3 "$CLIENT" stream \
   chain="$CHAIN" contract="$CLEARING" channel="$CH" step="$STEP" count="$PAYMENTS")"
 CUM="$(python3 -c "import sys,json;print(json.loads(sys.argv[1])['cumulative'])" "$STREAM")"
@@ -100,13 +118,13 @@ dim "  a naive on-chain transfer per payment would be ~$(python3 -c "print(f'{21
 
 b "4. CLEARING — many channels, one settlement"
 send "$PAYER_KEY" "$CLEARING" 'openChannel(address,uint256,uint256,uint64)' \
-  "$PAYEE" 100000000000000000 100000000000000000 "$(( $(date +%s) + 86400 ))" >/dev/null
+  "$PAYEE" "$CH2_COMMIT" "$CH2_COMMIT" "$(( $(date +%s) + 86400 ))" >/dev/null
 CH2="$(cast call --rpc-url "$RPC_URL" "$CLEARING" 'channelCount()(uint256)' | cut -d' ' -f1)"
 
 CUM_A=$(( CUM + 20 * STEP ))
 SIG_A="$(VOUCHER_KEY="$PAYER_KEY" python3 "$CLIENT" stream chain="$CHAIN" contract="$CLEARING" \
   channel="$CH" step="$CUM_A" count=1 | python3 -c 'import sys,json;print(json.load(sys.stdin)["signature"])')"
-CUM_B=$(( 30 * STEP ))
+CUM_B=$(( 30 * STEP ))   # well inside CH2_COMMIT
 SIG_B="$(VOUCHER_KEY="$PAYER_KEY" python3 "$CLIENT" stream chain="$CHAIN" contract="$CLEARING" \
   channel="$CH2" step="$CUM_B" count=1 | python3 -c 'import sys,json;print(json.load(sys.stdin)["signature"])')"
 
