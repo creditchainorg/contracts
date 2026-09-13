@@ -21,6 +21,10 @@ contract Multisig {
     address[] public owners;
     mapping(address => bool) public isOwner;
     uint256 public threshold;
+    /// @notice Pending proposals belong to one owner configuration. Rotation
+    /// invalidates them; approvals from removed owners must never carry forward.
+    uint256 public ownerEpoch;
+    mapping(uint256 => uint256) public transactionEpoch;
 
     struct Tx {
         address to;
@@ -48,6 +52,7 @@ contract Multisig {
     error NotConfirmed();
     error BelowThreshold(uint256 have, uint256 need);
     error CallFailed();
+    error StaleOwnerSet();
 
     modifier onlyOwner() {
         if (!isOwner[msg.sender]) revert NotOwner();
@@ -83,11 +88,13 @@ contract Multisig {
             owners.push(o);
         }
         threshold = threshold_;
+        ownerEpoch += 1;
         emit OwnersChanged(owners_.length, threshold_);
     }
 
     function submit(address to, uint256 value, bytes calldata data) external onlyOwner returns (uint256 txId) {
         txId = transactions.length;
+        transactionEpoch[txId] = ownerEpoch;
         transactions.push(Tx({ to: to, value: value, data: data, executed: false, confirmations: 0 }));
         emit Submitted(txId, msg.sender, to, value);
         _confirm(txId);
@@ -101,6 +108,7 @@ contract Multisig {
         if (txId >= transactions.length) revert NoSuchTx();
         Tx storage t = transactions[txId];
         if (t.executed) revert AlreadyExecuted();
+        if (transactionEpoch[txId] != ownerEpoch) revert StaleOwnerSet();
         if (confirmed[txId][msg.sender]) revert AlreadyConfirmed();
         confirmed[txId][msg.sender] = true;
         t.confirmations += 1;
@@ -112,6 +120,7 @@ contract Multisig {
         if (txId >= transactions.length) revert NoSuchTx();
         Tx storage t = transactions[txId];
         if (t.executed) revert AlreadyExecuted();
+        if (transactionEpoch[txId] != ownerEpoch) revert StaleOwnerSet();
         if (!confirmed[txId][msg.sender]) revert NotConfirmed();
         confirmed[txId][msg.sender] = false;
         t.confirmations -= 1;
@@ -125,6 +134,7 @@ contract Multisig {
         if (txId >= transactions.length) revert NoSuchTx();
         Tx storage t = transactions[txId];
         if (t.executed) revert AlreadyExecuted();
+        if (transactionEpoch[txId] != ownerEpoch) revert StaleOwnerSet();
         if (t.confirmations < threshold) revert BelowThreshold(t.confirmations, threshold);
 
         t.executed = true;
@@ -134,6 +144,9 @@ contract Multisig {
     }
 
     /// @notice Replace the owner set and threshold. Only via the multisig itself.
+    /// All unexecuted proposals become stale, including on a threshold-only
+    /// change. Re-submit under the new owner set; historical approvals remain
+    /// readable but cannot authorize new actions.
     function setOwners(address[] calldata owners_, uint256 threshold_) external onlySelf {
         _setOwners(owners_, threshold_);
     }

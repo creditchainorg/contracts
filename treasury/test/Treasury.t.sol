@@ -186,6 +186,53 @@ contract MultisigTest is Test {
         assertFalse(m.isOwner(c), "removed owner still authorised");
     }
 
+    function test_owner_rotation_invalidates_removed_owners_pending_approval() public {
+        vm.prank(c);
+        uint256 stale = m.submit(payee, 10 ether, "");
+        address[] memory next = new address[](3);
+        next[0] = a; next[1] = b; next[2] = outsider;
+        vm.prank(a);
+        uint256 rotation = m.submit(address(m), 0, abi.encodeCall(Multisig.setOwners, (next, 2)));
+        vm.prank(b);
+        m.confirm(rotation);
+        vm.prank(a);
+        m.execute(rotation);
+
+        // c is gone. A pending signature from c must not let a spend alone.
+        vm.prank(a);
+        vm.expectRevert(Multisig.StaleOwnerSet.selector);
+        m.confirm(stale);
+        vm.prank(a);
+        vm.expectRevert(Multisig.StaleOwnerSet.selector);
+        m.execute(stale);
+        assertEq(payee.balance, 0);
+    }
+
+    function test_threshold_change_invalidates_pending_and_new_proposals_work() public {
+        vm.prank(a);
+        uint256 stale = m.submit(payee, 10 ether, "");
+        address[] memory next = new address[](3);
+        next[0] = a; next[1] = b; next[2] = c;
+        vm.prank(a);
+        uint256 rotation = m.submit(address(m), 0, abi.encodeCall(Multisig.setOwners, (next, 1)));
+        vm.prank(b);
+        m.confirm(rotation);
+        vm.prank(a);
+        m.execute(rotation);
+        assertEq(m.ownerEpoch(), 2);
+        assertEq(m.transactionEpoch(stale), 1);
+
+        vm.startPrank(a);
+        vm.expectRevert(Multisig.StaleOwnerSet.selector);
+        m.execute(stale);
+        vm.expectRevert(Multisig.StaleOwnerSet.selector);
+        m.revoke(stale);
+        uint256 fresh = m.submit(payee, 1 ether, "");
+        m.execute(fresh);
+        vm.stopPrank();
+        assertEq(payee.balance, 1 ether);
+    }
+
     /// A duplicate owner would inflate the count without adding a signer, quietly
     /// weakening the threshold it is measured against.
     function test_rejects_duplicate_or_zero_owner() public {
