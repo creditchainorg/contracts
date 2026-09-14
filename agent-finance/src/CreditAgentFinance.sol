@@ -6,6 +6,9 @@ pragma solidity ^0.8.24;
 /// @title CreditAgentFinance
 /// @notice Event-first MVP for CreditChain agent finance and Credit Objects.
 /// @dev This contract is a developer-preview registry. It does not custody funds.
+/// `dailyLimit` is descriptive; `totalLimit` bounds each intent, not cumulative spend.
+/// Receipts and settlement/status events are authorized claims, not payment proofs.
+/// Use a separately reviewed spending vault for enforceable financial mandates.
 contract CreditAgentFinance {
     enum CreditObjectType {
         Unknown,
