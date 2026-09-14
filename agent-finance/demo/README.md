@@ -24,24 +24,25 @@ approved by a human — each one is allowed or rejected by the deployed
 ## Run it
 
 ```bash
-# 1. Have a node up (devnet default). e.g. the local devnet on :8545
+# 1. An RPC endpoint: a local node on :8545, or the public testnet
 # 2. forge + cast on PATH (~/.foundry/bin)
-cd contracts/agent-finance/demo
-RPC_URL=http://localhost:8545 ./agent_commerce_demo.sh
+# 3. A funded key you control
+cd agent-finance/demo
+OWNER_KEY=0x… RPC_URL=http://localhost:8545 ./agent_commerce_demo.sh
 ```
 
-Environment (all optional):
+Environment:
 
 | Var | Default | Meaning |
 |---|---|---|
 | `RPC_URL` | `http://localhost:8545` | JSON-RPC endpoint |
-| `OWNER_KEY` | devnet `deploy/devnet/secrets/faucet.key` | funded owner/deployer key |
+| `OWNER_KEY` | *(required)* | funded owner/deployer key |
 | `VAULT` | *(deploys a fresh one)* | reuse an already-deployed vault |
 
 Against the **public testnet**, point `RPC_URL` at the testnet RPC and set
 `OWNER_KEY` to a faucet-funded key. The same script then writes the same proof
 onto a public explorer — which is exactly the viral hook in
-[`../../../AI-FINANCE-THESIS.md`](../../../AI-FINANCE-THESIS.md) §4.
+[`AI-FINANCE-THESIS.md`](https://github.com/creditchainorg/creditchain/blob/main/AI-FINANCE-THESIS.md) §4.
 
 ## Why this is the moat
 

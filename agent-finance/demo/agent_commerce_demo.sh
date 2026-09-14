@@ -13,19 +13,18 @@
 #
 # Usage:
 #   RPC_URL=http://localhost:8545 ./agent_commerce_demo.sh
-# Env (all optional):
+# Env:
 #   RPC_URL     JSON-RPC endpoint           (default http://localhost:8545)
-#   OWNER_KEY   funded owner/deployer key   (default: devnet faucet.key)
+#   OWNER_KEY   funded owner/deployer key   (required)
 #   VAULT       existing vault address      (default: deploy a fresh one)
 set -euo pipefail
 
 export PATH="$HOME/.foundry/bin:$PATH"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$HERE/../../.." && pwd)"
 
 RPC_URL="${RPC_URL:-http://localhost:8545}"
-OWNER_KEY="${OWNER_KEY:-0x$(tr -d '[:space:]' < "$ROOT/deploy/devnet/secrets/faucet.key")}"
-[[ "$OWNER_KEY" == 0x0x* ]] && OWNER_KEY="0x${OWNER_KEY#0x0x}"
+OWNER_KEY="${OWNER_KEY:?set OWNER_KEY to a funded key you control (testnet: fund it from the faucet)}"
+[[ "$OWNER_KEY" == 0x* ]] || OWNER_KEY="0x$OWNER_KEY"
 
 bold()  { printf '\033[1m%s\033[0m\n' "$*"; }
 dim()   { printf '\033[2m%s\033[0m\n' "$*"; }

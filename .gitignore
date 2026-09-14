@@ -1,0 +1,13 @@
+# Foundry output, per project
+*/out/
+*/cache/
+*/broadcast/
+
+# Dependencies are the submodules in lib/, not per-project installs
+*/lib/
+
+# Keys and local settings never belong here
+.env
+.env.*
+!.env.example
+*.key

@@ -1,13 +1,13 @@
 # Foundry project configuration for the CreditAgentFinance contract.
 # Build / test:   forge build && forge test
-# Deploy:         see ../../deploy/scripts/deploy-agent-finance.sh
+# Deploy:         forge script script/Deploy.s.sol:Deploy --rpc-url testnet --broadcast
 
 [profile.default]
 src = "src"
 test = "test"
 script = "script"
 out = "out"
-libs = ["lib"]
+libs = ["../lib"]
 solc_version = "0.8.24"
 optimizer = true
 optimizer_runs = 1_000_000
@@ -18,8 +18,8 @@ evm_version = "cancun"
 [rpc_endpoints]
 local_single = "http://127.0.0.1:8545"
 local_multinode = "http://127.0.0.1:8645"
-devnet = "https://devnet.creditchain.org"
 testnet = "https://testnet.creditchain.org"
+argos_testnet = "https://argos.creditchain.org"
 mainnet = "https://rpc.creditchain.org"
 
 [fuzz]

@@ -101,9 +101,8 @@ operation creates, destroys, or strands value. See
 
 ## 9. Responsible disclosure
 
-Report suspected vulnerabilities privately to **security@openibank.com** (or the
-contact published on https://www.creditchain.org). Please include a minimal
+Report suspected vulnerabilities privately to **security@creditchain.org** (the
+contact in https://www.creditchain.org/.well-known/security.txt). Please include a minimal
 reproduction and the affected commit/deployment address. Do not open public
 issues or exploit live deployments. A coordinated-disclosure window will be
-agreed before any public write-up; a bug-bounty opens with the PoS testnet
-(see `ECOSYSTEM-MASTERPLAN.md` Phase 3).
+agreed before any public write-up; a bug-bounty opens with the PoS testnet.

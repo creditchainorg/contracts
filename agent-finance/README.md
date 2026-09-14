@@ -44,30 +44,29 @@ plain language.
 ## Build / test / deploy
 
 This package is a Foundry project (`foundry.toml`), so the standard tooling
-works:
+works. Its dependencies are git submodules in the repository's top-level
+`lib/`; Foundry fetches them on the first build.
 
 ```bash
 forge build
 forge test
 ```
 
-To deploy to any CreditChain network listed in
-`creditchain/deploy/shared/networks.json`:
+To deploy, check that the RPC is the network you mean, then run the
+[`script/Deploy.s.sol`](script/Deploy.s.sol) Foundry script with a key you
+funded yourself:
 
 ```bash
-# from the repo root
-./deploy/scripts/deploy-agent-finance.sh devnet     # or testnet, local-single, …
+cast chain-id --rpc-url testnet          # 2026042404 = Argos testnet
+forge script script/Deploy.s.sol:Deploy \
+    --rpc-url testnet \
+    --private-key "$PRIVATE_KEY" \
+    --broadcast
 ```
 
-The wrapper script resolves the RPC URL + chain id from the registry,
-sanity-checks the RPC's advertised chain id matches, runs the
-[`script/Deploy.s.sol`](script/Deploy.s.sol) Foundry script in a one-shot
-`ghcr.io/foundry-rs/foundry` container under the prefunded OpeniBank
-operator key, captures the deployed address, and writes it to
-`deploy/<network>/secrets/credit-agent-finance.address` so the per-network
-Browser indexer can pick it up at boot. See
-[`docs/public/getting-started.md` §5](../../docs/public/getting-started.md#5-deploy-the-agent-finance-protocol-operators)
-for the full operator walkthrough.
+The script prints the deployed address, chain id, and deployer. Network
+details, the faucet, and the explorer are listed at
+[docs.creditchain.org](https://docs.creditchain.org/developers/connect/).
 
 ## Status
 

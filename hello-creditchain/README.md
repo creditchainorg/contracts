@@ -1,7 +1,7 @@
 # Hello CreditChain
 
 Minimal Foundry starter for deploying a Solidity contract to CreditChain
-Devnet or Testnet.
+testnet.
 
 CreditChain is EVM-compatible, so this project intentionally uses standard
 Solidity and Foundry conventions. There are no CreditChain-specific imports or
@@ -11,14 +11,12 @@ framework hooks.
 
 | Network | RPC alias | Chain ID | Purpose |
 |---|---|---:|---|
-| Devnet | `creditchain_devnet` | `2026042403` | fast iteration, resettable |
-| Testnet | `creditchain_testnet` | `2026042404` | stable integration testing |
+| Argos testnet | `creditchain_testnet` | `2026042404` | stable integration testing |
 
 ## Use
 
 ```bash
-forge install foundry-rs/forge-std --no-git
-forge test
+forge test          # fetches forge-std (a submodule in ../lib) on first run
 
 # Fund the deployer from https://faucet.creditchain.org/testnet first.
 forge script script/Deploy.s.sol:Deploy \
