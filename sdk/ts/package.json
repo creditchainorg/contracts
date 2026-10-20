@@ -1,0 +1,20 @@
+{
+  "name": "@creditchain/agents",
+  "version": "0.1.0",
+  "description": "Bounded, revocable spending for AI agents on any EVM chain: ERC-AGM v2 mandates, payment receipts, post-quantum escape keys, and the canonical x402 addresses.",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+  },
+  "files": ["dist", "README.md"],
+  "engines": { "node": ">=22.6" },
+  "scripts": {
+    "abi": "node scripts/abi.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test test/*.test.ts"
+  },
+  "peerDependencies": { "viem": "^2.46.0" },
+  "devDependencies": { "viem": "^2.46.3", "typescript": "~5.9.3", "@types/node": "^22.10.0" }
+}

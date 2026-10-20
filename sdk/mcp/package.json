@@ -1,0 +1,22 @@
+{
+  "name": "@creditchain/agents-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that lets an AI agent pay within an ERC-AGM mandate — and nothing more — on CreditChain or any EVM chain.",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "bin": { "creditchain-agents-mcp": "./dist/server.js" },
+  "engines": { "node": ">=22.6" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node src/server.ts",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@creditchain/agents": "file:../ts",
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "viem": "^2.46.3",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": { "typescript": "~5.9.3", "@types/node": "^22.10.0" }
+}

@@ -11,3 +11,7 @@
 .env.*
 !.env.example
 *.key
+
+# SDK packages
+node_modules/
+sdk/*/dist/
