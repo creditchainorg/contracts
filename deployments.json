@@ -1,0 +1,52 @@
+{
+  "_comment": "Where these contracts are live. Addresses are the same on every chain; this records which chains have them.",
+  "chains": {
+    "eip155:2026042404": {
+      "name": "CreditChain Argos testnet",
+      "deployedOn": "2026-10-20",
+      "standards": {
+        "AgentMandateVault": {
+          "address": "0x56bf4e5214d8978957B7EA0BeCe4FB7ae0f1e577",
+          "runtimeCodeKeccak": "0xf4b92dc8be3f02d17c82bd3e5e52c195dea2be23fb5fe6c72dbfc34755a3436d"
+        },
+        "QuantumEscapeRegistry": {
+          "address": "0x8cd71d9D53FF0501145eEd2e8F740B49Cb25f108",
+          "runtimeCodeKeccak": "0xe506f111c7c2025ee609866f47602dcfde48246c55195be78222b1161605c23e"
+        }
+      },
+      "canonical": {
+        "Permit2": {
+          "address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+          "runtimeCodeKeccak": "0xe50b09fb0d2daa7209b499e8b8e9ec6a30565e1ae06dafad5d749609fd395a76"
+        },
+        "x402ExactPermit2Proxy": {
+          "address": "0x402085c248EeA27D92E8b30b2C58ed07f9E20001",
+          "runtimeCodeKeccak": "0xce6429c0bb49284660683287c0a8fe548a88379072327d026626909d202048b9"
+        },
+        "x402UptoPermit2Proxy": {
+          "address": "0x4020A4f3b7b90ccA423B9fabCc0CE57C6C240002",
+          "runtimeCodeKeccak": "0x4662dc27323421a3698be49ac95f7b0dba141c238d31ef543248d1a11f8d8eec"
+        },
+        "x402BatchSettlement": {
+          "address": "0x4020074e9dF2ce1deE5A9C1b5c3f541D02a10003",
+          "runtimeCodeKeccak": "0x9d7732e6a1bd90a720272d0be708bda60623c0c18b0b6f7bee773246447a3005"
+        },
+        "ERC3009DepositCollector": {
+          "address": "0x4020806089470a89826cB9fB1f4059150b550004",
+          "runtimeCodeKeccak": "0x0c2cfe8840e964588598801e8d109593fdc57e16d85f214653139c79186d1f3b"
+        },
+        "Permit2DepositCollector": {
+          "address": "0x4020425FAf3B746C082C2f942b4E5159887B0005",
+          "runtimeCodeKeccak": "0x113778631c3a21174455c5935b8514b616b0a17e35f268d92a5aed9bc1234a5a"
+        },
+        "EntryPoint-v0.7": {
+          "address": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+          "runtimeCodeKeccak": "0x8db5ff695839d655407cc8490bb7a5d82337a86a6b39c3f0258aa6c3b582fc58"
+        }
+      },
+      "notDeployed": {
+        "PaidReviews": "Argos lacks the Safe singleton factory, so the canonical ERC-8004 registries cannot exist there."
+      }
+    }
+  }
+}

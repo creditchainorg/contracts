@@ -1,0 +1,9 @@
+# Only DeployCanonical.s.sol lives here; the contracts it deploys are init code in initcode/.
+[profile.default]
+src = "."
+script = "."
+test = "."
+out = "out"
+libs = ["../lib"]
+solc_version = "0.8.28"
+fs_permissions = [{ access = "read", path = "./" }]

@@ -35,7 +35,12 @@ Sources of the init code in `initcode/` (all checked that way on 2026-10-20):
 ```bash
 canonical/fetch-initcode.py --check                     # verify the stored init code, offline
 canonical/deploy.sh <rpc> --account <keystore-name>     # deploy whatever is missing
+# or, keeping the key off the command line:
+cd canonical && DEPLOYER_KEY=… forge script DeployCanonical.s.sol --rpc-url <rpc> --broadcast
 ```
+
+Live on Argos (chain 2026042404) since 2026-10-20; [`../deployments.json`](../deployments.json)
+records each chain and the runtime code hash found there.
 
 ## What was checked on 2026-10-20
 
