@@ -1,0 +1,42 @@
+# Standards deployed at the SAME address on every EVM chain.
+#
+# Every contract here is deployed through the deterministic-deployment proxy
+# (0x4e59b44847b379578588920cA78FbF26c0B4956C, preinstalled in CreditChain's genesis and present
+# on nearly every EVM chain) with a fixed salt. The address is a function of the init code, so the
+# compiler settings below are part of the address: change any of them and every address moves.
+#
+# Build / test:   forge build && forge test
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["../lib"]
+solc_version = "0.8.28"
+evm_version = "cancun"       # EIP-1153 transient storage; lowest common fork we target
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+bytecode_hash = "none"       # no metadata hash: identical source + settings = identical bytes
+cbor_metadata = false
+
+[lint]
+# Expiries and rolling windows are measured in hours and days; the few seconds of latitude a block
+# proposer has over its timestamp cannot move them in a way that matters.
+exclude_lints = ["block-timestamp"]
+
+[fuzz]
+runs = 1024
+
+[invariant]
+runs = 256
+depth = 64
+fail_on_revert = false
+
+[rpc_endpoints]
+argos = "https://testnet.creditchain.org"
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = true

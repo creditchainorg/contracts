@@ -1,0 +1,69 @@
+{
+  "_comment": [
+    "Third-party contracts that live at the same address on every EVM chain because they were",
+    "created by the deterministic-deployment proxy (0x4e59b448…) with a fixed salt. Deploying the",
+    "same init code with the same salt on CreditChain puts the same contract at the same address,",
+    "so every SDK, wallet and agent that knows these addresses works on CreditChain unchanged.",
+    "The init code is fetched from a public explorer and is trusted only because CREATE2 binds it:",
+    "fetch-initcode.py refuses any init code that does not reproduce the canonical address."
+  ],
+  "deployer": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+  "contracts": [
+    {
+      "name": "Permit2",
+      "address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "salt": "0x0000000000000000000000000000000000000000d3af2663da51c10215000000",
+      "source": "https://eth.blockscout.com",
+      "referenceRpc": "https://ethereum-rpc.publicnode.com",
+      "why": "Signature-based token approvals; used by x402's exact/upto proxies and Permit2 deposits."
+    },
+    {
+      "name": "x402ExactPermit2Proxy",
+      "address": "0x402085c248EeA27D92E8b30b2C58ed07f9E20001",
+      "salt": "0x0000000000000000000000000000000000000000000000003000000007263b0e",
+      "source": "https://base.blockscout.com",
+      "referenceRpc": "https://mainnet.base.org",
+      "why": "x402 'exact' payments for any ERC-20 via Permit2 (Cantina-audited)."
+    },
+    {
+      "name": "x402UptoPermit2Proxy",
+      "address": "0x4020A4f3b7b90ccA423B9fabCc0CE57C6C240002",
+      "salt": "0x000000000000000000000000000000000000000000000000b000000001db633d",
+      "source": "https://base.blockscout.com",
+      "referenceRpc": "https://mainnet.base.org",
+      "why": "x402 'upto' payments: the server charges at most the signed amount."
+    },
+    {
+      "name": "x402BatchSettlement",
+      "address": "0x4020074e9dF2ce1deE5A9C1b5c3f541D02a10003",
+      "salt": "0x000000000000000000000000000000000000000000000000e000000005be885c",
+      "source": "https://base.blockscout.com",
+      "referenceRpc": "https://mainnet.base.org",
+      "why": "x402 'batch-settlement': deposit once, pay per request with off-chain vouchers."
+    },
+    {
+      "name": "ERC3009DepositCollector",
+      "address": "0x4020806089470a89826cB9fB1f4059150b550004",
+      "salt": "0x0000000000000000000000000000000000000000000000001800000007a95284",
+      "source": "https://base.blockscout.com",
+      "referenceRpc": "https://mainnet.base.org",
+      "why": "Gasless x402 channel deposits for EIP-3009 tokens (USDC-style)."
+    },
+    {
+      "name": "Permit2DepositCollector",
+      "address": "0x4020425FAf3B746C082C2f942b4E5159887B0005",
+      "salt": "0x000000000000000000000000000000000000000000000000f800000001a5d4ff",
+      "source": "https://base.blockscout.com",
+      "referenceRpc": "https://mainnet.base.org",
+      "why": "Gasless x402 channel deposits for any ERC-20 via Permit2."
+    },
+    {
+      "name": "EntryPoint-v0.7",
+      "address": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+      "salt": "0x90d8084deab30c2a37c45e8d47f49f2f7965183cb6990a98943ef94940681de3",
+      "source": "https://eth.blockscout.com",
+      "referenceRpc": "https://ethereum-rpc.publicnode.com",
+      "why": "ERC-4337 account abstraction: smart accounts and paymasters (gas paid by someone else)."
+    }
+  ]
+}

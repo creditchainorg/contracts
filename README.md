@@ -8,6 +8,8 @@ directory is an independent Foundry project.
 | [`agent-finance`](agent-finance) | Agent spend mandates (`AgentSpendVault`), clearing, reputation, NFT market, and a post-quantum break-glass guard, with an end-to-end [demo](agent-finance/demo) against a live chain |
 | [`treasury`](treasury) | `Timelock`, `Multisig`, `VestingWallet`, `StakingReserve` — the custody contracts high-value genesis roles resolve to |
 | [`hello-creditchain`](hello-creditchain) | Minimal starter for deploying a contract to CreditChain |
+| [`standards`](standards) | Contracts deployed at the same address on every EVM chain: ERC-AGM v2 mandates in any asset, payment-backed ERC-8004 reviews, and a post-quantum escape-key registry |
+| [`canonical`](canonical) | Init code, proofs and a deploy script for the third-party contracts (x402, Permit2, ERC-4337 EntryPoint) that live at one address on every chain |
 
 ## Build and test
 
